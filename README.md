@@ -6,6 +6,8 @@
 
 ## 效果
 
+<img width="1280" height="800" alt="录屏-剪辑" src="https://github.com/user-attachments/assets/b578f41e-4653-4cd0-9a84-672725253c11" />
+
 按住鼠标右键画手势：
 
 - 屏幕上实时绘制青绿色轨迹
