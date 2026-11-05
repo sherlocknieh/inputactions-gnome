@@ -1,3 +1,54 @@
+diff --git a/src/libinputactions/config/ConfigLoader.cpp b/src/libinputactions/config/ConfigLoader.cpp
+index 6d13073..4fab756 100644
+--- a/src/libinputactions/config/ConfigLoader.cpp
++++ b/src/libinputactions/config/ConfigLoader.cpp
+@@ -68,6 +68,7 @@ struct ConfigData
+     std::set<KeyboardKey> emergencyCombination = {KEY_BACKSPACE, KEY_SPACE, KEY_ENTER};
+ 
+     bool enableMouseStrokeOverlay{};
++    qreal strokeDirectionTolerance = 18.0;
+ };
+ 
+ ConfigLoader::ConfigLoader()
+@@ -264,6 +265,7 @@ QFuture<std::shared_ptr<ConfigData>> ConfigLoader::createConfig(const QString &r
+                         if (const auto *mouseStrokeNode = overlayNode->mapAt("mouse_stroke")) {
+                             const auto *enableNode = mouseStrokeNode->at("enable");
+                             loadMember(config->enableMouseStrokeOverlay, enableNode);
++                            loadMember(config->strokeDirectionTolerance, mouseStrokeNode->at("direction_tolerance"));
+                             if (config->enableMouseStrokeOverlay) {
+                                 requestOverlay(enableNode);
+                             }
+@@ -293,6 +295,7 @@ QFuture<void> ConfigLoader::activateConfig(std::shared_ptr<ConfigData> config, b
+         g_globalConfig->setAllowExternalVariableAccess(config->allowExternalVariableAccess);
+         g_globalConfig->setAutoReload(config->autoReload);
+         g_globalConfig->setSendNotificationOnError(config->sendNotificationOnError);
++        g_globalConfig->setStrokeDirectionTolerance(config->strokeDirectionTolerance);
+ 
+         if (auto *libevdev = dynamic_cast<LibevdevComplementaryInputBackend *>(g_inputBackend.get())) {
+             libevdev->setEnabled(config->libevdevEnabled);
+diff --git a/src/libinputactions/config/GlobalConfig.h b/src/libinputactions/config/GlobalConfig.h
+index d8a5a0a..cad7c23 100644
+--- a/src/libinputactions/config/GlobalConfig.h
++++ b/src/libinputactions/config/GlobalConfig.h
+@@ -39,11 +39,18 @@ public:
+     bool sendNotificationOnError() const { return m_sendNotificationOnError; }
+     void setSendNotificationOnError(bool value) { m_sendNotificationOnError = value; }
+ 
++    /**
++     * Maximum deviation (in degrees) allowed when matching a straight stroke against a diagonal template.
++     */
++    qreal strokeDirectionTolerance() const { return m_strokeDirectionTolerance; }
++    void setStrokeDirectionTolerance(qreal value) { m_strokeDirectionTolerance = value; }
++
+ private:
+     // Default values defined in Config
+     bool m_allowExternalVariableAccess{};
+     bool m_autoReload{};
+     bool m_sendNotificationOnError{};
++    qreal m_strokeDirectionTolerance{18.0};
+ };
+ 
+ inline std::shared_ptr<GlobalConfig> g_globalConfig;
 diff --git a/src/libinputactions/dbus/MainDBusInterface.cpp b/src/libinputactions/dbus/MainDBusInterface.cpp
 index 936ee65..caefda8 100644
 --- a/src/libinputactions/dbus/MainDBusInterface.cpp
@@ -345,10 +396,18 @@ index 4998bb7..c2d4794 100644
       * @returns A future finished with the ID of the triggered action or an empty string.
       */
 diff --git a/src/libinputactions/triggers/core/StrokeTriggerCore.cpp b/src/libinputactions/triggers/core/StrokeTriggerCore.cpp
-index f352966..e8cbb8f 100644
+index f352966..af86c34 100644
 --- a/src/libinputactions/triggers/core/StrokeTriggerCore.cpp
 +++ b/src/libinputactions/triggers/core/StrokeTriggerCore.cpp
-@@ -73,6 +73,25 @@ const std::vector<Point> &Stroke::points() const
+@@ -34,6 +34,7 @@
+ */
+ 
+ #include "StrokeTriggerCore.h"
++#include <libinputactions/config/GlobalConfig.h>
+ #include <libinputactions/helpers/Math.h>
+ #include <math.h>
+ #include <stdlib.h>
+@@ -73,6 +74,29 @@ const std::vector<Point> &Stroke::points() const
      return m_points;
  }
  
@@ -364,6 +423,10 @@ index f352966..e8cbb8f 100644
 +        return true;
 +    }
 +
++    if (tolerance < 0) {
++        tolerance = (g_globalConfig ? g_globalConfig->strokeDirectionTolerance() : 18.0) / 180.0;
++    }
++
 +    auto diff = std::abs(alpha() - other.alpha());
 +    if (diff > 1.0) {
 +        diff = 2.0 - diff;
@@ -375,10 +438,10 @@ index f352966..e8cbb8f 100644
   * approximation) of the integral over square of the angle difference among
   * (roughly) all reparametrizations whose slope is always between 1/2 and 2.
 diff --git a/src/libinputactions/triggers/core/StrokeTriggerCore.h b/src/libinputactions/triggers/core/StrokeTriggerCore.h
-index b5aa4a6..52b2be2 100644
+index b5aa4a6..33eacdf 100644
 --- a/src/libinputactions/triggers/core/StrokeTriggerCore.h
 +++ b/src/libinputactions/triggers/core/StrokeTriggerCore.h
-@@ -60,6 +60,23 @@ public:
+@@ -60,6 +60,26 @@ public:
      qreal compare(const Stroke &other) const;
      static double min_matching_score();
  
@@ -396,8 +459,11 @@ index b5aa4a6..52b2be2 100644
 +     * Extra direction gate for straight diagonal gestures. A straight performed stroke may only match a
 +     * diagonal template (alpha +/-0.25 or +/-0.75) if its direction is within tolerance. Polyline
 +     * gestures and axis-aligned templates are unaffected.
++     *
++     * A negative tolerance means the runtime value from GlobalConfig::strokeDirectionTolerance()
++     * (configured via overlay.mouse_stroke.direction_tolerance) is used.
 +     */
-+    bool directionMatches(const Stroke &other, qreal tolerance = 12.0 / 180.0) const;
++    bool directionMatches(const Stroke &other, qreal tolerance = -1) const;
 +
  private:
      void finish();

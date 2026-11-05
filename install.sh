@@ -52,12 +52,12 @@ if [ "$(git -C lib/core rev-parse --short HEAD)" != "$CORE_COMMIT" ]; then
     git -C lib/core checkout -f "$CORE_COMMIT"
 fi
 
-# ------------------------------------------- 4. 客户端补丁（幂等）
+# ------------------------------------------- 4. 客户端补丁（每次重新应用，保证最新）
 log "应用客户端补丁"
 cd "$INST/standalone/lib/core"
-if git apply --reverse --check "$ROOT/patches/client.patch" >/dev/null 2>&1; then
-    echo "补丁已存在，跳过"
-elif git apply --check "$ROOT/patches/client.patch" >/dev/null 2>&1; then
+# 先剥离旧补丁（若已存在），再重新应用当前补丁，保证配置/参数变更能生效
+git apply --reverse "$ROOT/patches/client.patch" 2>/dev/null || true
+if git apply --check "$ROOT/patches/client.patch" >/dev/null 2>&1; then
     git apply "$ROOT/patches/client.patch"
 else
     die "补丁无法应用。请确认 core 是否为 $CORE_COMMIT，或检查 patches/client.patch"

@@ -10,6 +10,8 @@
 overlay:
   mouse_stroke:
     enable: true
+    # 斜向手势的角度容差（度）。方向落在 45°±该值内即匹配斜向模板，调大可放宽、调小可收紧。
+    direction_tolerance: 18
 
 device_rules:
   - conditions:

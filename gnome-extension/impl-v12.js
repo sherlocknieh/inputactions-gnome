@@ -98,7 +98,7 @@ class StrokeOverlay {
             log(`IA overlay first draw: points=${this._points.length}`);
         }
 
-        cr.setLineWidth(4);
+        cr.setLineWidth(2.5);
         cr.setLineCap(1);
         cr.setLineJoin(1);
         cr.setSourceRGBA(0.12, 0.78, 0.72, 1.0);
