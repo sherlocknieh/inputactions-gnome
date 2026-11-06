@@ -22,6 +22,9 @@ device_rules:
         - none:
             # 避免和 Input Remapper 的虚拟键盘抢设备
             - $name contains input-remapper
+            # Input Remapper 的转发设备沿用源设备名，会带 "(InputActions output)"，
+            # 不能再被 InputActions 抓一层（物理设备名里不含 InputActions）
+            - $name contains InputActions
     grab: true
     ignore: false
 
