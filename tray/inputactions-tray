@@ -9,6 +9,7 @@ AppIndicator/KStatusNotifierItem 扩展（本机已启用）。
 
 import fcntl
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -200,10 +201,41 @@ class Tray:
         return False
 
     def _on_edit(self, *_):
+        if not CONFIG.exists():
+            notify("打开配置文件失败", f"文件不存在：{CONFIG}")
+            return
+
+        # 先走系统默认关联，再按常见编辑器兜底，避免 xdg-open 无声失败
         try:
-            subprocess.Popen(["xdg-open", str(CONFIG)])
-        except Exception:
+            Gio.AppInfo.launch_default_for_uri(CONFIG.as_uri(), None)
+            return
+        except GLib.Error:
             pass
+
+        for cmd in (
+            ("gnome-text-editor",),
+            ("gedit",),
+            ("kate",),
+            ("xed",),
+            ("code", "-n"),
+            ("nano",),  # 兜底，需要终端
+        ):
+            exe = shutil.which(cmd[0])
+            if not exe:
+                continue
+            try:
+                subprocess.Popen(
+                    [exe, *cmd[1:], str(CONFIG)],
+                    start_new_session=True,
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                )
+                return
+            except Exception:
+                continue
+
+        notify("打开配置文件失败", f"没有可用的编辑器：{CONFIG}")
 
     def _on_config_changed(self, _monitor, _file, _other, event):
         if event in (
