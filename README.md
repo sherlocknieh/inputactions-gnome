@@ -120,8 +120,40 @@ InputActions client (patched)
 - `showLabel` / `cancel` overlay D-Bus 方法
 - 笔画过程中每 2 个事件匹配一次，实时推送动作名
 - 2 秒手势暂停超时（`GESTURE_PAUSE_TIMEOUT`）
-- 斜向角度门限（`Stroke::directionMatches`，45°±12°）
+- 斜向角度门限（`Stroke::directionMatches`，默认 45°±18°，由 `overlay.mouse_stroke.direction_tolerance` 配置）
 - 轻量 `pause` / `unpause`（不重载配置、不释放设备）
+
+## 与 Input Remapper 共存
+
+InputActions 会独占 grab 物理鼠标/键盘，所以 Input Remapper 里建在**物理设备**上的预设必然失败
+（GUI 底部 `Failed to apply preset`，日志 `Cannot grab ... Device or resource busy`）。
+
+两种做法：
+
+1. **推荐：不链式**。单个按键映射直接用 InputActions 的 `mouse.press` 触发器，例如中键 → `SPACE+ENTER`：
+
+   ```yaml
+   mouse:
+     gestures:
+       - type: press
+         mouse_buttons: [ middle ]
+         instant: true   # 否则默认等 200ms，快速点击会被当成普通中键透传
+         actions:
+           - input:
+               - keyboard: [ SPACE+ENTER ]
+   ```
+
+2. **必须保留 Input Remapper 预设时**，把预设建在 `"<设备名> (InputActions output)"` 这张虚拟设备卡上，
+   并且 preset 的 `input_combination` 要带该 output 节点的 `origin_hash`，否则 input-remapper 会连带
+   抓同组的 `(InputActions internal)` 节点而整体失败。本仓库 `config/config.yaml` 的 `device_rules` 已加
+   `- $name contains InputActions`，避免 InputActions 反过来再抓 input-remapper 的转发设备（转发设备沿用源设备名）。
+
+   命令行启动需要 root（非 root 列不到这些虚拟设备）：
+
+   ```bash
+   sudo -A input-remapper-control --config-dir ~/.config/input-remapper-2 \
+     --command start --device "2.4G Mouse (InputActions output)" --preset middle_button
+   ```
 
 ## 已知限制
 
