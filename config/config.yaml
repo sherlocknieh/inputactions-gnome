@@ -75,6 +75,38 @@ mouse:
                 - input:
                     - keyboard: [ LEFTCTRL+LEFTSHIFT+T ]
 
+        # ---------------------------------------------------------- 文件管理器专用
+        # 直线左右滑在文件管理器里用于前进/后退；浏览器里同名笔画仍是切标签页。
+        # 需要支持别的文件管理器，往 any 列表里加 class 即可。
+        - conditions:
+            - any:
+                - $window_class contains Nautilus
+                - $window_class contains nautilus
+                - $window_class contains dolphin
+                - $window_class contains Dolphin
+                - $window_class contains thunar
+                - $window_class contains Thunar
+                - $window_class contains nemo
+                - $window_class contains Nemo
+                - $window_class contains caja
+                - $window_class contains Caja
+                - $window_class contains pcmanfm
+                - $window_class contains PCManFM
+          gestures:
+            # 向右划 -> 前进（Alt+Right）
+            - id: 文件管理器前进
+              strokes: [ 'CjIAAFoyZAA=' ]
+              actions:
+                - input:
+                    - keyboard: [ LEFTALT+RIGHT ]
+
+            # 向左划 -> 后退（Alt+Left）
+            - id: 文件管理器后退
+              strokes: [ 'WjIAZAoyZGQ=' ]
+              actions:
+                - input:
+                    - keyboard: [ LEFTALT+LEFT ]
+
         # ---------------------------------------------------------------- 全局
         # 向上划 -> 滚动到顶部（Ctrl+Home）
         - id: 滚动到顶部
@@ -104,8 +136,8 @@ mouse:
             - input:
                 - keyboard: [ PRINT ]
 
-        # 右下划 -> 粘贴（Super+V）
-        - id: 粘贴
+        # 右下划 -> 剪贴板（Super+V）
+        - id: 剪贴板
           strokes: [ 'CgoAGVpaZBk=' ]
           actions:
             - input:
