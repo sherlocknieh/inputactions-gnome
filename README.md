@@ -26,7 +26,7 @@
 ## 环境要求
 
 - Fedora 44+（脚本目前只做 Fedora 的依赖安装）
-- GNOME 45–50 **Wayland**（在 GNOME 50 验证）
+- GNOME 45–51 **Wayland**（在 GNOME 50 验证，51 已兼容）
 - 可用的 `sudo`、网络
 - 托盘需要 GNOME 的 **AppIndicator and KStatusNotifierItem Support** 扩展（没有也能用 overlay，只是没有托盘图标）
 
@@ -161,6 +161,7 @@ InputActions 会独占 grab 物理鼠标/键盘，所以 Input Remapper 里建�
 - 补丁固定在上述提交；上游更新后可能需要 rebase `patches/client.patch`。
 - GNOME 扩展是本地安装，不在 extensions.gnome.org。
 - 托盘依赖 AppIndicator 扩展。
+- 上游辅助扩展 `inputactions@inputactions.org` 的 metadata 可能缺少当前 shell 大版本而被判为 OUT OF DATE（表现为 `inputactions variables list` 里 `window_class` 全为 null，浏览器条件手势失效）。`install.sh` 会把它复制到用户目录并注入当前版本，升级 GNOME 后重跑安装即可。
 - 安装后必须注销/重新登录一次。
 - KDE / Hyprland 请直接用官方 InputActions 的 KWin/Hyprland 插件 + 官方 overlay，不要用本项目。
 

@@ -86,13 +86,32 @@ cp "$ROOT/gnome-extension/extension.js" \
    "$ROOT/gnome-extension/impl-current.txt" \
    "$ROOT/gnome-extension/metadata.json" "$EXT/"
 
-# InputActions 的 GNOME 辅助扩展（提供 $window_class 等），客户端启动时才创建软链；
-# 这里提前创建，确保登录时能被 shell 扫描到。
+# InputActions 的 GNOME 辅助扩展（通过 D-Bus 提供 $window_class 等，浏览器条件手势依赖它）。
+# 上游 metadata 只声明到发布时的 GNOME 版本，比它新的 shell 会把它判定为 OUT OF DATE 而不加载，
+# 结果是 $window_class 全为 null，浏览器条件手势静默失效。
+# 所以这里复制一份到用户目录，并把当前 shell 大版本注入 shell-version，避免软链到系统目录时无法修改。
 HELPER_UUID="inputactions@inputactions.org"
 HELPER_SRC="/usr/share/inputactions/gnome/$HELPER_UUID"
 HELPER_DST="$HOME/.local/share/gnome-shell/extensions/$HELPER_UUID"
-if [ -d "$HELPER_SRC" ] && [ ! -e "$HELPER_DST" ]; then
-    ln -s "$HELPER_SRC" "$HELPER_DST"
+SHELL_MAJOR="$(gnome-shell --version 2>/dev/null | awk '{print $NF}' | cut -d. -f1)"
+if [ -d "$HELPER_SRC" ]; then
+    # 先清掉可能残留的旧软链/旧副本，再整目录复制（上游目前只有 extension.js + metadata.json）
+    rm -rf "$HELPER_DST"
+    mkdir -p "$HELPER_DST"
+    cp -r "$HELPER_SRC"/. "$HELPER_DST"/
+    python3 - "$HELPER_DST/metadata.json" "$SHELL_MAJOR" <<'PY'
+import json, sys
+
+path, major = sys.argv[1], sys.argv[2]
+with open(path) as f:
+    meta = json.load(f)
+versions = meta.setdefault("shell-version", [])
+if major and major.isdigit() and major not in versions:
+    versions.append(major)
+with open(path, "w") as f:
+    json.dump(meta, f, indent=4)
+    f.write("\n")
+PY
 fi
 
 # ------------------------------------------------------- 8. 配置

@@ -23,8 +23,11 @@ rm -f "$HOME/.config/autostart/inputactions-client.desktop" \
       "$HOME/.config/autostart/inputactions-tray.desktop"
 rm -f "$HOME/.local/share/applications/inputactions.desktop"
 rm -rf "$HOME/.local/share/gnome-shell/extensions/inputactions-overlay@local"
+# 辅助扩展可能是软链（旧版安装）或真实副本（注入 shell-version 后），两种都移除
 HELPER="$HOME/.local/share/gnome-shell/extensions/inputactions@inputactions.org"
-[ -L "$HELPER" ] && rm -f "$HELPER"
+if [ -e "$HELPER" ] || [ -L "$HELPER" ]; then
+    rm -rf "$HELPER"
+fi
 rm -f "$HOME/.local/bin/inputactions-tray" "$HOME/.local/bin/inputactions-service"
 rm -rf "$HOME/.local/state/inputactions-tray"
 rm -f "$HOME/.local/share/icons/hicolor/scalable/apps/inputactions-tray-"*.svg
