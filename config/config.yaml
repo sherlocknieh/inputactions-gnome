@@ -171,5 +171,14 @@ mouse:
             - input:
                 - keyboard: [ LEFTCTRL+W ]
 
+        # 下→右→上 -> 关闭窗口（Alt+F4，全局）
+        # 三段折线：起点/两个拐点/终点，t 按段长均分；alpha 依次为下(0.5)、右(0)、上(-0.5)。
+        # 与"下→右"是前缀关系，但匹配取最高分，本模板对完整三段的得分高于两段模板。
+        - id: 关闭窗口
+          strokes: [ 'CgoAMgpaIQBaWkPOWgpkAA==' ]
+          actions:
+            - input:
+                - keyboard: [ LEFTALT+F4 ]
+
 # 想改成自己的笔画：运行 `inputactions record-stroke`，按住右键画一次，
 # 把输出的 base64 替换到上面的 strokes 里即可。
