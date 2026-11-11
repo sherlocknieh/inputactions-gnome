@@ -143,6 +143,15 @@ mouse:
             - input:
                 - keyboard: [ LEFTMETA+V ]
 
+        # 下→左 -> 撤销（Ctrl+Z，全局）
+        # 折线：起点/拐点/终点；alpha 依次为下(0.5)、左(1.0)。
+        # 与斜向"左下"（还原窗口）和折线"左→下"（恢复标签页）方向不同，匹配互不干扰。
+        - id: 撤销
+          strokes: [ 'WgoAMlpaMmQKWmQA' ]
+          actions:
+            - input:
+                - keyboard: [ LEFTCTRL+Z ]
+
         # 左下划 -> 还原窗口（Super+Down）
         - id: 还原窗口
           strokes: [ 'WgoASwpaZEs=' ]
