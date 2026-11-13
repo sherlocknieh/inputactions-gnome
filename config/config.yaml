@@ -75,14 +75,23 @@ mouse:
                 - input:
                     - keyboard: [ LEFTCTRL+LEFTSHIFT+T ]
 
-            # 右下划 -> 刷新页面（F5）
+            # 右下划 -> 刷新页面（Ctrl+R）
             # 与全局"剪贴板"同笔画，模板完全相同、得分相同；匹配取列表中靠前者，
             # 浏览器组在整个列表之前，所以浏览器里是刷新，其他应用仍是剪贴板。
             - id: 刷新页面
               strokes: [ 'CgoAGVpaZBk=' ]
               actions:
                 - input:
-                    - keyboard: [ F5 ]
+                    - keyboard: [ LEFTCTRL+R ]
+
+            # 先右后下（折线）-> 刷新页面（Ctrl+R）
+            # 模板由"下→右"（关闭标签页）的 x/y 互换得到，同为两段等长折线：
+            # 点坐标 (x, y, 进度%) 依次为 (10,10,0) → (90,10,50) → (90,90,100)。
+            - id: 刷新页面（折线）
+              strokes: [ 'CgoAMloKMgBaWmQA' ]
+              actions:
+                - input:
+                    - keyboard: [ LEFTCTRL+R ]
 
         # ---------------------------------------------------------- 文件管理器专用
         # 直线左右滑在文件管理器里用于前进/后退；浏览器里同名笔画仍是切标签页。
