@@ -85,10 +85,10 @@ mouse:
                     - keyboard: [ LEFTCTRL+R ]
 
             # 先右后下（折线）-> 刷新页面（Ctrl+R）
-            # 模板由"下→右"（关闭标签页）的 x/y 互换得到，同为两段等长折线：
-            # 点坐标 (x, y, 进度%) 依次为 (10,10,0) → (90,10,50) → (90,90,100)。
+            # 与"下→右"（关闭标签页）互为转置，两段等长：点依次为 (10,10) → (90,10) → (90,90)，
+            # 方向角随段变化（右=0、下=50），不能照抄原模板的角度字节。
             - id: 刷新页面（折线）
-              strokes: [ 'CgoAMloKMgBaWmQA' ]
+              strokes: [ 'CgoAAFoKMjJaWmQA' ]
               actions:
                 - input:
                     - keyboard: [ LEFTCTRL+R ]
